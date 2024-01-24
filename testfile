@@ -1,0 +1,246 @@
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.javatechie.crud.example.entity.Product;
+import com.javatechie.crud.example.service.ProductService;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+@ContextConfiguration(classes = {ProductController.class})
+@ExtendWith(SpringExtension.class)
+class ProductControllerDiffblueTest {
+    @Autowired
+    private ProductController productController;
+
+    @MockBean
+    private ProductService productService;
+
+    /**
+     * Method under test: {@link ProductController#updateProduct(Product)}
+     */
+    @Test
+    void testUpdateProduct() throws Exception {
+        // Arrange
+        Product product = new Product();
+        product.setAvailable(true);
+        product.setId(1);
+        product.setName("Name");
+        product.setPrice(10.0d);
+        product.setQuantity(1);
+        product.setRange(10.0d);
+        when(productService.updateProduct(Mockito.<Product>any())).thenReturn(product);
+
+        Product product2 = new Product();
+        product2.setAvailable(true);
+        product2.setId(1);
+        product2.setName("Name");
+        product2.setPrice(10.0d);
+        product2.setQuantity(1);
+        product2.setRange(10.0d);
+        String content = (new ObjectMapper()).writeValueAsString(product2);
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.put("/update")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(content);
+
+        // Act and Assert
+        MockMvcBuilders.standaloneSetup(productController)
+                .build()
+                .perform(requestBuilder)
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType("application/json"))
+                .andExpect(MockMvcResultMatchers.content()
+                        .string("{\"id\":1,\"name\":\"Name\",\"quantity\":1,\"price\":10.0,\"available\":true,\"range\":10.0}"));
+    }
+
+    /**
+     * Method under test: {@link ProductController#addProduct(Product)}
+     */
+    @Test
+    void testAddProduct() throws Exception {
+        // Arrange
+        doNothing().when(productService).saveProduct(Mockito.<Product>any());
+
+        Product product = new Product();
+        product.setAvailable(true);
+        product.setId(1);
+        product.setName("Name");
+        product.setPrice(10.0d);
+        product.setQuantity(1);
+        product.setRange(10.0d);
+        String content = (new ObjectMapper()).writeValueAsString(product);
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.post("/addProduct")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(content);
+
+        // Act and Assert
+        MockMvcBuilders.standaloneSetup(productController)
+                .build()
+                .perform(requestBuilder)
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    /**
+     * Method under test: {@link ProductController#deleteProduct(int)}
+     */
+    @Test
+    void testDeleteProduct() throws Exception {
+        // Arrange
+        when(productService.deleteProduct(anyInt())).thenReturn("Delete Product");
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.delete("/delete/{id}", 1);
+
+        // Act and Assert
+        MockMvcBuilders.standaloneSetup(productController)
+                .build()
+                .perform(requestBuilder)
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType("text/plain;charset=ISO-8859-1"))
+                .andExpect(MockMvcResultMatchers.content().string("Delete Product"));
+    }
+
+    /**
+     * Method under test: {@link ProductController#deleteProduct(int)}
+     */
+    @Test
+    void testDeleteProduct2() throws Exception {
+        // Arrange
+        when(productService.deleteProduct(anyInt())).thenReturn("Delete Product");
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.delete("/delete/{id}", 1);
+        requestBuilder.characterEncoding("Encoding");
+
+        // Act and Assert
+        MockMvcBuilders.standaloneSetup(productController)
+                .build()
+                .perform(requestBuilder)
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType("text/plain;charset=ISO-8859-1"))
+                .andExpect(MockMvcResultMatchers.content().string("Delete Product"));
+    }
+
+    /**
+     * Method under test: {@link ProductController#addProducts(List)}
+     */
+    @Test
+    void testAddProducts() throws Exception {
+        // Arrange
+        when(productService.saveProducts(Mockito.<List<Product>>any())).thenReturn(new ArrayList<>());
+        MockHttpServletRequestBuilder contentTypeResult = MockMvcRequestBuilders.post("/addProducts")
+                .contentType(MediaType.APPLICATION_JSON);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        MockHttpServletRequestBuilder requestBuilder = contentTypeResult
+                .content(objectMapper.writeValueAsString(new ArrayList<>()));
+
+        // Act and Assert
+        MockMvcBuilders.standaloneSetup(productController)
+                .build()
+                .perform(requestBuilder)
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType("application/json"))
+                .andExpect(MockMvcResultMatchers.content().string("[]"));
+    }
+
+    /**
+     * Method under test: {@link ProductController#findAllProducts()}
+     */
+    @Test
+    void testFindAllProducts() throws Exception {
+        // Arrange
+        when(productService.getProducts()).thenReturn(new ArrayList<>());
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.get("/products");
+
+        // Act and Assert
+        MockMvcBuilders.standaloneSetup(productController)
+                .build()
+                .perform(requestBuilder)
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType("application/json"))
+                .andExpect(MockMvcResultMatchers.content().string("[]"));
+    }
+
+    /**
+     * Method under test: {@link ProductController#findAllProducts()}
+     */
+    @Test
+    void testFindAllProducts2() throws Exception {
+        // Arrange
+        when(productService.getProducts()).thenReturn(new ArrayList<>());
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.get("/products");
+        requestBuilder.characterEncoding("Encoding");
+
+        // Act and Assert
+        MockMvcBuilders.standaloneSetup(productController)
+                .build()
+                .perform(requestBuilder)
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType("application/json"))
+                .andExpect(MockMvcResultMatchers.content().string("[]"));
+    }
+
+    /**
+     * Method under test: {@link ProductController#findProductById(int)}
+     */
+    @Test
+    void testFindProductById() throws Exception {
+        // Arrange
+        Product product = new Product();
+        product.setAvailable(true);
+        product.setId(1);
+        product.setName("Name");
+        product.setPrice(10.0d);
+        product.setQuantity(1);
+        product.setRange(10.0d);
+        when(productService.getProductById(anyInt())).thenReturn(product);
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.get("/productById/{id}", 1);
+
+        // Act and Assert
+        MockMvcBuilders.standaloneSetup(productController)
+                .build()
+                .perform(requestBuilder)
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType("application/json"))
+                .andExpect(MockMvcResultMatchers.content()
+                        .string("{\"id\":1,\"name\":\"Name\",\"quantity\":1,\"price\":10.0,\"available\":true,\"range\":10.0}"));
+    }
+
+    /**
+     * Method under test: {@link ProductController#findProductByName(String)}
+     */
+    @Test
+    void testFindProductByName() throws Exception {
+        // Arrange
+        Product product = new Product();
+        product.setAvailable(true);
+        product.setId(1);
+        product.setName("Name");
+        product.setPrice(10.0d);
+        product.setQuantity(1);
+        product.setRange(10.0d);
+        when(productService.getProductByName(Mockito.<String>any())).thenReturn(product);
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.get("/product/{name}", "Name");
+
+        // Act and Assert
+        MockMvcBuilders.standaloneSetup(productController)
+                .build()
+                .perform(requestBuilder)
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType("application/json"))
+                .andExpect(MockMvcResultMatchers.content()
+                        .string("{\"id\":1,\"name\":\"Name\",\"quantity\":1,\"price\":10.0,\"available\":true,\"range\":10.0}"));
+    }
+}
